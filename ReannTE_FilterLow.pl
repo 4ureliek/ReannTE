@@ -14,7 +14,7 @@ use Getopt::Long;
 use Bio::DB::Fasta;
 use Bio::SeqIO;
 
-my $v = "1.0";
+my $v = "1.1";
 my $usage = "\nUsage, v$v:
      perl <scriptname.pl> -i <fa> [-r <RMpath>] [-p <XX>]
      	
@@ -83,16 +83,16 @@ sub filter_low {
 	#output
 	my $name = $fa;
 	$name =~ s/\.fa$|\.fasta$//;
+	my $keep = "$name.nolow.fa";
+	my $rejected = "$name.low.fa";
 		
 	if (-e "$fa.masked") {
 		my $db = Bio::DB::Fasta->new("$fa.masked") or confess "ERROR: could not create Bio::DB::Fasta object from $fa.masked $!\n";	
 		#create list of the ID of the file
 		my @dbIDs = $db->get_all_ids();
 	
-		#fa outputs
-		my $keep = "$name.nolow.fa";
-		open(my $keep_fh, ">", $keep) or confess "ERROR: could not create $keep $!\n";	
-		my $rejected = "$name.low.fa";
+		#fa outputs		
+		open(my $keep_fh, ">", $keep) or confess "ERROR: could not create $keep $!\n";			
 		open(my $rejected_fh, ">", $rejected) or confess "ERROR: could not create $rejected $!\n";	
 	
 		#filter
@@ -122,7 +122,6 @@ sub filter_low {
 	mv_RMout($fa,"$name.RMlow"); #cleanup to avoid issue afterwards (other maskings)
 }
 
-
 #----------------------------------------------------------------------------
 # rewrite in clean fasta format, will replace previous file
 #----------------------------------------------------------------------------
@@ -137,7 +136,7 @@ sub rw_fasta {
 		$realfa_obj->write_seq($seq);		
 	}
 	system "rm -f $fa";
-	system "mv $fasta $fa"; 
+	system "mv $fa $fa"; 
 }
 
 #----------------------------------------------------------------------------
