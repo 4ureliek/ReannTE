@@ -12,12 +12,14 @@ use Bio::DB::Fasta;
 use Bio::SeqIO;
 use Array::Unique;
 
-my $version = "1.1";
+my $version = "1.2";
 my $changelog = "
 #	- v1.0 = Mar 2014
 #	- v1.1 = 06 Mar 2015
 #             - remove log file, print STDERR instead
 #             - deal with the -int added by Repeat Masker in Rname when _int
+#   - v1.2 = Jan 2016
+#             - sub merge_mask => issues with masking/masked length of 0 => set % to 0 when that happens
 ";
 my $usage = "\nUsage, v$version:
      perl <scriptname.pl> -a <seqs_1.fa> -b <seqs_2.fa> [-p <x>] [-s <x>] [-forceRM <x>] [-gc <XX>] [-RM <path>] [-project <name>] [-CheckLow <XX>]
@@ -130,8 +132,8 @@ if (($rm_check == 0) || ($forceRM == 1)) {# => forceRM = 1, then just let RM do 
 	print STDERR "      -> with the following command line:\n" if ($v);
 	my $ifgc;
 	($gc eq "na")?($ifgc = ""):($ifgc = -gc $gc);
-	my $cmda = "nohup $rm_loc/RepeatMasker $fa_a -lib $fa_b -e ncbi -xsmall -nolow $ifgc > $path/$outname.mask-a.nohup.log &";
-	my $cmdb = "nohup $rm_loc/RepeatMasker $fa_b -lib $fa_a -e ncbi -xsmall -nolow $ifgc > $path/$outname.mask-b.nohup.log &";
+	my $cmda = "nohup $rm_loc/RepeatMasker $fa_a -lib $fa_b -e ncbi -xsmall -nolow -int $ifgc > $path/$outname.mask-a.nohup.log &";
+	my $cmdb = "nohup $rm_loc/RepeatMasker $fa_b -lib $fa_a -e ncbi -xsmall -nolow -int $ifgc > $path/$outname.mask-b.nohup.log &";
 	print STDERR "     $cmda\n" if ($v);
 	print STDERR "     $cmdb\n" if ($v);
 	system "$cmda";
@@ -543,9 +545,9 @@ sub merge_mask {
 	# first, loop on mask_a 
 	foreach my $masked (keys %{$mask_a}) {	
 		foreach my $masking (keys %{$mask_a->{$masked}}) {			
-			#store masked amount for $masked and masking amount for $masking		
-			$mask_a->{$masked}{$masking}{'Gper'}=$mask_a->{$masked}{$masking}{'Glen'}/$TEinfo->{$masked}{'len'}*100;
-			$mask_a->{$masked}{$masking}{'Rper'}=$mask_a->{$masked}{$masking}{'Rlen'}/$TEinfo->{$masking}{'len'}*100;
+			#store masked amount for $masked and masking amount for $masking
+			($TEinfo->{$masked}{'len'} == 0)?($mask_a->{$masked}{$masking}{'Gper'}=0):($mask_a->{$masked}{$masking}{'Gper'}=$mask_a->{$masked}{$masking}{'Glen'}/$TEinfo->{$masked}{'len'}*100);
+			($TEinfo->{$masking}{'len'} == 0)?($mask_a->{$masked}{$masking}{'Rper'}=0):($mask_a->{$masked}{$masking}{'Rper'}=$mask_a->{$masked}{$masking}{'Rlen'}/$TEinfo->{$masking}{'len'}*100);
 			
 			if ($mask_b->{$masking}{$masked}) { #means that there is a reciprocal masking => check
 				#check what complexity is higher => order in $mask
@@ -569,9 +571,8 @@ sub merge_mask {
 	foreach my $masked (keys %{$mask_b}) {
 		foreach my $masking (keys %{$mask_b->{$masked}}) {
 			#store masked amount for $masked and masking amount for $masking
-			print STDERR "$masked, $masking\n" unless ($TEinfo->{$masking}{'len'});
-			$mask_b->{$masked}{$masking}{'Gper'}=$mask_b->{$masked}{$masking}{'Glen'}/$TEinfo->{$masked}{'len'}*100;
-			$mask_b->{$masked}{$masking}{'Rper'}=$mask_b->{$masked}{$masking}{'Rlen'}/$TEinfo->{$masking}{'len'}*100;
+			($TEinfo->{$masked}{'len'} == 0)?($mask_b->{$masked}{$masking}{'Gper'}=0):($mask_b->{$masked}{$masking}{'Gper'}=$mask_b->{$masked}{$masking}{'Glen'}/$TEinfo->{$masked}{'len'}*100);
+			($TEinfo->{$masking}{'len'}==0)?($mask_b->{$masked}{$masking}{'Rper'}=0):($mask_b->{$masked}{$masking}{'Rper'}=$mask_b->{$masked}{$masking}{'Rlen'}/$TEinfo->{$masking}{'len'}*100);
 			
 			unless ($mask_a->{$masking}{$masked}) {
 				$mask->{$masked}{$masking} = $mask_b->{$masked}{$masking};
