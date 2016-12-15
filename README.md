@@ -62,7 +62,7 @@ ReannTE_FilterLow.pl
  	 - Bioperl (Bio::DB::Fasta, Bio::SeqIO)
 
 ========================================================
-ReannTE_FilterLow.pl
+ReannTE_MergeFasta.pl
 
 	 WHAT IT DOES: 
 	 This script facilitates merging two consensus libraries
