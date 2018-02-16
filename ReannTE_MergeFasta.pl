@@ -132,8 +132,8 @@ if (($rm_check == 0) || ($forceRM == 1)) {# => forceRM = 1, then just let RM do 
 	print STDERR "      -> with the following command line:\n" if ($v);
 	my $ifgc;
 	($gc eq "na")?($ifgc = ""):($ifgc = -gc $gc);
-	my $cmda = "nohup $rm_loc/RepeatMasker $fa_a -lib $fa_b -e ncbi -xsmall -nolow -int $ifgc > $path/$outname.mask-a.nohup.log &";
-	my $cmdb = "nohup $rm_loc/RepeatMasker $fa_b -lib $fa_a -e ncbi -xsmall -nolow -int $ifgc > $path/$outname.mask-b.nohup.log &";
+	my $cmda = "nohup $rm_loc/RepeatMasker $fa_a -lib $fa_b -e ncbi -xsmall -nolow $ifgc > $path/$outname.mask-a.nohup.log &";
+	my $cmdb = "nohup $rm_loc/RepeatMasker $fa_b -lib $fa_a -e ncbi -xsmall -nolow $ifgc > $path/$outname.mask-b.nohup.log &";
 	print STDERR "     $cmda\n" if ($v);
 	print STDERR "     $cmdb\n" if ($v);
 	system "$cmda";
